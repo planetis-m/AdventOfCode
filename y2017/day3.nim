@@ -36,8 +36,8 @@ proc initSpiral(): Spiral =
    result.direction = initPoint(1, 0)
 
 proc initGrid(): Grid =
-   let origin = initPoint(0, 0)
-   result.storage = {origin: 1}.toTable
+   result.storage = initTable[Point, int]()
+   result.storage[initPoint(0, 0)] = 1
 
 # ------------
 # Program code
