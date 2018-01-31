@@ -39,11 +39,11 @@ proc initGrid(): Grid =
    result.storage = initTable[Point, int]()
    result.storage[initPoint(0, 0)] = 1
 
-proc printGrid(g: Grid; n: int) =
-   let s = n div 2
-   for j in countdown(s, -s):
+proc printGrid(g: Grid; p: Point) =
+   let side = max(abs(p.x), abs(p.y))
+   for j in countdown(side, -side):
       var t: seq[string] = @[]
-      for i in countup(-s, s):
+      for i in countup(-side, side):
          let p = initPoint(i, j)
          var v: int
          if g.storage.hasKey(p):
@@ -102,7 +102,7 @@ proc solvePart2(number: int): int =
       next(s)
       value = g.sumAdjacents(s.position)
       g.storage[s.position] = value
-   printGrid(g, 11)
+   printGrid(g, s.position)
    result = value
 
 let input = 347991
