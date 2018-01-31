@@ -1,4 +1,4 @@
-import hashes, tables
+import hashes, tables, strutils
 
 type
    Point = object
@@ -23,7 +23,7 @@ proc `+`(a, b: Point): Point =
    result.x = a.x + b.x
    result.y = a.y + b.y
 
-proc `+=`(a: var Point, b: Point) =
+proc `+=`(a: var Point; b: Point) =
    a.x += b.x
    a.y += b.y
 
@@ -38,6 +38,18 @@ proc initSpiral(): Spiral =
 proc initGrid(): Grid =
    result.storage = initTable[Point, int]()
    result.storage[initPoint(0, 0)] = 1
+
+proc printGrid(g: Grid; n: int) =
+   let s = n div 2
+   for j in countdown(s, -s):
+      var t: seq[string] = @[]
+      for i in countup(-s, s):
+         let p = initPoint(i, j)
+         var v: int
+         if g.storage.hasKey(p):
+            v = g.storage[p]
+         t.add($v)
+      echo(join(t, "\t"))
 
 # ------------
 # Program code
@@ -57,7 +69,7 @@ proc next(s: var Spiral) =
 
 proc sumAdjacents(g: Grid; p: Point): int =
    # Summates the values of the neighboring Points.
-   let neighbors = [
+   let directions = [
       initPoint(-1, -1),
       initPoint(-1, 0),
       initPoint(-1, 1),
@@ -67,8 +79,8 @@ proc sumAdjacents(g: Grid; p: Point): int =
       initPoint(1, 0),
       initPoint(1, 1)
    ]
-   for n in neighbors:
-      let adjacent = p + n
+   for d in directions:
+      let adjacent = p + d
       if g.storage.hasKey(adjacent):
          result += g.storage[adjacent]
 
@@ -90,6 +102,7 @@ proc solvePart2(number: int): int =
       next(s)
       value = g.sumAdjacents(s.position)
       g.storage[s.position] = value
+   printGrid(g, 11)
    result = value
 
 let input = 347991
