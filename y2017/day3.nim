@@ -69,7 +69,7 @@ proc next(s: var Spiral) =
 
 proc sumAdjacents(g: Grid; p: Point): int =
    # Summates the values of the neighboring Points.
-   let directions = [
+   const directions = [
       initPoint(-1, -1),
       initPoint(-1, 0),
       initPoint(-1, 1),
@@ -104,6 +104,10 @@ proc solvePart2(number: int): int =
       g.storage[s.position] = value
    printGrid(g, s.position)
    result = value
+
+# --------------
+# Driver Program
+# --------------
 
 let input = 347991
 echo solvePart1(input)

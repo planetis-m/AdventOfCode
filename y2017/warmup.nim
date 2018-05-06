@@ -5,54 +5,68 @@ type
       x, y: int
 
    Grid = object
-      origin: Point
       markersA: HashSet[Point]
       markersB: HashSet[Point]
+
+# ---------------
+# Helper routines
+# ---------------
+
+proc dist(a, b: Point): int =
+   result = abs(b.x - a.x) + abs(b.y - a.y)
 
 proc hash(p: Point): Hash =
    result = hash(p.x) !& hash(p.y)
    result = !$result
 
-template registerPoint(markers): untyped =
-   let currentPos = Point(x: x, y: y)
-   markers.incl(currentPos)
+proc initPoint(x, y: int): Point =
+   result.x = x
+   result.y = y
 
-proc createGrid(input: string): Grid =
+proc initGrid(): Grid =
    result.markersA = initSet[Point]()
    result.markersB = initSet[Point]()
-   var x, y = 0
+
+# ------------
+# Program code
+# ------------
+
+proc feed(g: var Grid; input: string) =
+   var cursor = initPoint(0, 0)
    for command in split(input, ", "):
       case command
       of "Up":
-         inc y
+         inc(cursor.y)
       of "Down":
-         dec y
+         dec(cursor.y)
       of "Left":
-         dec x
+         dec(cursor.x)
       of "Right":
-         inc x
+         inc(cursor.x)
       of "A":
-         registerPoint(result.markersA)
+         g.markersA.incl(cursor)
       of "B":
-         registerPoint(result.markersB)
+         g.markersB.incl(cursor)
       of "Start":
-         return
+         break
 
-template maxDistanceImpl(a, b: typed): untyped =
-   let dist = abs(b.x - a.x) + abs(b.y - a.y)
-   if dist > result: result = dist
+proc maxDistanceCenter(g: Grid): int =
+   var origin = initPoint(0, 0)
+   for p in g.markersA:
+      result = max(result, dist(p, origin))
+   for p in g.markersB:
+      result = max(result, dist(p, origin))
 
-proc maxDistanceFromOrigin(g: Grid): int =
-   for point in g.markersA:
-      maxDistanceImpl(point, g.origin)
-   for point in g.markersB:
-      maxDistanceImpl(point, g.origin)
+proc maxDistance(g: Grid): int =
+   for k in g.markersA:
+      for l in g.markersB:
+         result = max(result, dist(k, l))
 
-proc maxDistanceBetweenPoints(g: Grid): int =
-   for pointA in g.markersA:
-      for pointB in g.markersB:
-         maxDistanceImpl(pointB, pointA)
+# --------------
+# Driver Program
+# --------------
 
-var g = createGrid(readFile("codes.txt"))
-echo maxDistanceFromOrigin(g)
-echo maxDistanceBetweenPoints(g)
+var g = initGrid()
+g.feed(readFile("input0.txt"))
+echo maxDistanceCenter(g)
+echo maxDistance(g)
