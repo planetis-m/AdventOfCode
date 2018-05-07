@@ -31,7 +31,7 @@ proc initGrid(): Grid =
 # Program code
 # ------------
 
-proc feed(g: var Grid; input: string) =
+proc traverse(g: var Grid; input: string) =
    var cursor = initPoint(0, 0)
    for command in split(input, ", "):
       case command
@@ -58,15 +58,16 @@ proc maxDistanceCenter(g: Grid): int =
       result = max(result, dist(p, origin))
 
 proc maxDistance(g: Grid): int =
-   for k in g.markersA:
-      for l in g.markersB:
-         result = max(result, dist(k, l))
+   for p in g.markersA:
+      # g.markersB.excl(p)
+      for r in g.markersB:
+         result = max(result, dist(p, r))
 
 # --------------
 # Driver Program
 # --------------
 
 var g = initGrid()
-g.feed(readFile("input0.txt"))
+g.traverse(readFile("input0.txt"))
 echo maxDistanceCenter(g)
 echo maxDistance(g)

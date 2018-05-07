@@ -1,22 +1,19 @@
-proc toDigitSeq(s: string): seq[int8] =
-   result = @[]
-   var i = 0
-   while s[i] in {'0'..'9'}:
-      result.add int8(s[i]) - int8('0')
-      inc i
+proc toDigitSeq(s: string): seq[int] =
+   const digits = {'0' .. '9'}
+   for i in 0 .. high(s):
+      if s[i] in digits:
+         result.add(int(s[i]) - int('0'))
 
-template cyclicEqual: bool =
-   arr[i] == arr[(i + d) mod n]
-
-proc solve(arr: seq[int8]; secondPart = false): int =
-   let n = len(arr)
-   let d =
-      if secondPart: n div 2 
+proc solve(s: seq[int]; secondPart = false): int =
+   # sum equals with stride
+   let n = len(s)
+   let stride =
+      if secondPart: n div 2
       else: 1
    for i in 0 ..< n:
-      if cyclicEqual():
-         result += arr[i]
+      if s[i] == s[(i + stride) mod n]: # cyclic equals
+         result += s[i]
 
-let inputArr = toDigitSeq(readFile("captcha.txt"))
-echo solve(inputArr)
-echo solve(inputArr, true)
+let input = toDigitSeq(readFile("input1.txt"))
+echo solve(input)
+echo solve(input, true)
