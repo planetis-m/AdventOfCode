@@ -45,7 +45,7 @@ proc printGrid(g: Grid; p: Point) =
       var t: seq[string] = @[]
       for i in countup(-side, side):
          let p = initPoint(i, j)
-         var v: int
+         var v = 0
          if g.storage.hasKey(p):
             v = g.storage[p]
          t.add($v)

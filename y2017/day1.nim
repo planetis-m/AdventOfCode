@@ -3,6 +3,8 @@ proc toDigitSeq(s: string): seq[int] =
    for i in 0 .. high(s):
       if s[i] in digits:
          result.add(int(s[i]) - int('0'))
+      else:
+         break
 
 proc solve(s: seq[int]; secondPart = false): int =
    # sum equals with stride
