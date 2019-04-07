@@ -5,8 +5,7 @@ type
       x, y: int
 
    Grid = object
-      markersA: HashSet[Point]
-      markersB: HashSet[Point]
+      markersA, markersB: HashSet[Point]
 
 # ---------------
 # Helper routines

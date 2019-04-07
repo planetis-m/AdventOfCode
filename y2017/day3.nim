@@ -1,4 +1,4 @@
-import hashes, tables, strutils
+import hashes, tables
 
 type
    Point = object
@@ -28,28 +28,28 @@ proc `+=`(a: var Point; b: Point) =
    a.y += b.y
 
 proc initPoint(x, y: int): Point =
-   result.x = x
-   result.y = y
+   result = Point(x: x, y: y)
 
 proc initSpiral(): Spiral =
-   result.position = initPoint(0, 0)
-   result.direction = initPoint(1, 0)
+   result = Spiral(position: initPoint(0, 0), direction: initPoint(1, 0))
 
 proc initGrid(): Grid =
-   result.storage = initTable[Point, int]()
-   result.storage[initPoint(0, 0)] = 1
+   result = Grid(storage: initTable[Point, int]())
 
-proc printGrid(g: Grid; p: Point) =
+proc print(g: Grid; p: Point) =
    let side = max(abs(p.x), abs(p.y))
+   # Top-down iteration to display the Grid properly.
    for j in countdown(side, -side):
-      var t: seq[string] = @[]
+      var buffer: string
       for i in countup(-side, side):
+         if buffer.len > 0:
+            buffer.add('\t')
          let p = initPoint(i, j)
          var v = 0
-         if g.storage.hasKey(p):
+         if p in g.storage:
             v = g.storage[p]
-         t.add($v)
-      echo(join(t, "\t"))
+         buffer.add($v)
+      echo(buffer)
 
 # ------------
 # Program code
@@ -77,37 +77,36 @@ proc sumAdjacents(g: Grid; p: Point): int =
       initPoint(0, 1),
       initPoint(1, -1),
       initPoint(1, 0),
-      initPoint(1, 1)
-   ]
+      initPoint(1, 1)]
    for d in directions:
       let adjacent = p + d
-      if g.storage.hasKey(adjacent):
+      if contains in g.storage:
          result += g.storage[adjacent]
 
-proc solvePart1(number: int): int =
+proc solvePart1(number: int): Natural =
    # Distance of Point whose value is given, from the origin.
    var s = initSpiral()
    var value = 1
    while value < number:
       next(s)
-      inc(value)
+      value.inc
    result = abs(s.position.x) + abs(s.position.y)
 
-proc solvePart2(number: int): int =
+proc solvePart2(number: int): Natural =
    # First value written that is larger than the input.
    var s = initSpiral()
    var g = initGrid()
    var value = 1
    while value < number:
+      g.storage[s.position] = value
       next(s)
       value = g.sumAdjacents(s.position)
-      g.storage[s.position] = value
-   printGrid(g, s.position)
+   g.print(s.position)
    result = value
 
-# --------------
-# Driver Program
-# --------------
+# -------------
+# Batch Program
+# -------------
 
 let input = 347991
 echo solvePart1(input)
