@@ -1,27 +1,26 @@
-import hashes, tables
 
 type
    Point = object
       x, y: int
 
    Spiral = object
-      position: Point
-      direction: Point
+      position, direction: Point
 
-   Grid = Table[Point, int]
+   Shape = object
+      stride, bound: int
+
+   Grid = object
+      shape: Shape
+      storage: seq[int]
 
 # ---------------
 # Helper routines
 # ---------------
 
-proc hash(p: Point): Hash =
-   result = hash(p.x) !& hash(p.y)
-   result = !$result
-
 proc `+`(a, b: Point): Point =
    result = Point(x: a.x + b.x, y: a.y + b.y)
 
-proc `+=`(a: var Point; b: Point) =
+proc `+=`(a: var Point, b: Point) =
    a.x += b.x
    a.y += b.y
 
@@ -29,24 +28,62 @@ proc initPoint(x, y: int): Point =
    result = Point(x: x, y: y)
 
 proc initSpiral(): Spiral =
-   result = Spiral(position: initPoint(0, 0), direction: initPoint(1, 0))
+   result = Spiral(position: initPoint(0, 0),
+      direction: initPoint(1, 0))
 
-proc initGrid(): Grid =
-   result = initTable[Point, int]()
+proc initShape(stride, bound: int): Shape =
+   result = Shape(stride: stride, bound: bound)
+
+proc ravel(p: Point; s: Shape): int =
+   # Converts a coordinate to a flat (linear) index.
+   result = (p.y + s.bound) * s.stride + p.x + s.bound
+
+proc contains(s: Shape; p: Point): bool =
+   # Checks if the Point can fit in a grid of Shape s.
+   result = max(abs(p.x), abs(p.y)) <= s.bound
+
+proc enlarge(g: var Grid; growthFactor = 2) =
+   let old = g.shape
+   let bound = old.bound * growthFactor
+   let stride = bound * 2 + 1
+   g.shape = initShape(stride, bound)
+   var n = newSeq[int](stride * stride)
+   swap(g.storage, n)
+   for i in 0 ..< n.len:
+      let x = i mod old.stride - old.bound
+      let y = i div old.stride - old.bound
+      let p = initPoint(x, y)
+      g.storage[ravel(p, g.shape)] = n[i]
+
+proc `[]`(g: Grid; p: Point): int =
+   # Assumes the Point is in the grid, otherwise an outlier
+   # may get a value stored for another Point.
+   let flat = ravel(p, g.shape)
+   result = g.storage[flat]
+
+proc `[]=`(g: var Grid; p: Point; value: int) =
+   if not contains(g.shape, p): enlarge(g)
+   let flat = ravel(p, g.shape)
+   g.storage[flat] = value
+
+proc initGrid(initial = 3): Grid =
+   # Initial is the maximum horizontal and vertical distance
+   # of a Point from the (square) Grid. Its negative number
+   # is the array's base index.
+   let stride = initial * 2 + 1
+   result = Grid(shape: initShape(stride, initial),
+      storage: newSeq[int](stride * stride))
 
 proc print(g: Grid; p: Point) =
-   let side = max(abs(p.x), abs(p.y))
+   let bound = max(abs(p.x), abs(p.y))
    # Top-down iteration to display the Grid properly.
-   for j in countdown(side, -side):
+   for j in countdown(bound, -bound):
       var buffer = ""
-      for i in countup(-side, side):
+      for i in countup(-bound, bound):
          if buffer.len > 0:
             buffer.add('\t')
          let p = initPoint(i, j)
-         var v = 0
-         if p in g:
-            v = g[p]
-         buffer.add($v)
+         buffer.add($g[p])
       echo(buffer)
 
 # ------------
@@ -78,7 +115,7 @@ proc sumAdjacents(g: Grid; p: Point): int =
       initPoint(1, 1)]
    for d in directions:
       let adjacent = p + d
-      if adjacent in g:
+      if adjacent in g.shape:
          result += g[adjacent]
 
 proc solvePart1(number: int): Natural =
