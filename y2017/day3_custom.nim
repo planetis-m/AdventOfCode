@@ -24,12 +24,12 @@ proc `+=`(a: var Point, b: Point) =
    a.x += b.x
    a.y += b.y
 
-proc initPoint(x, y: int): Point =
+proc point(x, y: int): Point =
    result = Point(x: x, y: y)
 
 proc initSpiral(): Spiral =
-   result = Spiral(position: initPoint(0, 0),
-      direction: initPoint(1, 0))
+   result = Spiral(position: point(0, 0),
+      direction: point(1, 0))
 
 proc initShape(stride, bound: int): Shape =
    result = Shape(stride: stride, bound: bound)
@@ -52,7 +52,7 @@ proc enlarge(g: var Grid; growthFactor = 2) =
    for i in 0 ..< n.len:
       let x = i mod old.stride - old.bound
       let y = i div old.stride - old.bound
-      let p = initPoint(x, y)
+      let p = point(x, y)
       g.storage[ravel(p, g.shape)] = n[i]
 
 proc `[]`(g: Grid; p: Point): int =
@@ -78,11 +78,11 @@ proc print(g: Grid; p: Point) =
    let bound = max(abs(p.x), abs(p.y))
    # Top-down iteration to display the Grid properly.
    for j in countdown(bound, -bound):
-      var buffer = ""
+      var buffer: string
       for i in countup(-bound, bound):
          if buffer.len > 0:
             buffer.add('\t')
-         let p = initPoint(i, j)
+         let p = point(i, j)
          buffer.add($g[p])
       echo(buffer)
 
@@ -105,14 +105,14 @@ proc next(s: var Spiral) =
 proc sumAdjacents(g: Grid; p: Point): int =
    # Summates the values of the neighboring Points.
    const directions = [
-      initPoint(-1, -1),
-      initPoint(-1, 0),
-      initPoint(-1, 1),
-      initPoint(0, -1),
-      initPoint(0, 1),
-      initPoint(1, -1),
-      initPoint(1, 0),
-      initPoint(1, 1)]
+      point(-1, -1),
+      point(-1, 0),
+      point(-1, 1),
+      point(0, -1),
+      point(0, 1),
+      point(1, -1),
+      point(1, 0),
+      point(1, 1)]
    for d in directions:
       let adjacent = p + d
       if adjacent in g.shape:
@@ -144,5 +144,5 @@ proc solvePart2(number: int): Natural =
 # -------------
 
 let input = 347991
-echo solvePart1(input)
-echo solvePart2(input)
+echo solvePart1(input) # 480
+echo solvePart2(input) # 349975

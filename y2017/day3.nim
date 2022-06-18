@@ -5,8 +5,7 @@ type
       x, y: int
 
    Spiral = object
-      position: Point
-      direction: Point
+      position, direction: Point
 
    Grid = Table[Point, int]
 
@@ -25,11 +24,11 @@ proc `+=`(a: var Point; b: Point) =
    a.x += b.x
    a.y += b.y
 
-proc initPoint(x, y: int): Point =
+proc point(x, y: int): Point =
    result = Point(x: x, y: y)
 
 proc initSpiral(): Spiral =
-   result = Spiral(position: initPoint(0, 0), direction: initPoint(1, 0))
+   result = Spiral(position: point(0, 0), direction: point(1, 0))
 
 proc initGrid(): Grid =
    result = initTable[Point, int]()
@@ -38,11 +37,11 @@ proc print(g: Grid; p: Point) =
    let side = max(abs(p.x), abs(p.y))
    # Top-down iteration to display the Grid properly.
    for j in countdown(side, -side):
-      var buffer = ""
+      var buffer: string
       for i in countup(-side, side):
          if buffer.len > 0:
             buffer.add('\t')
-         let p = initPoint(i, j)
+         let p = point(i, j)
          var v = 0
          if p in g:
             v = g[p]
@@ -68,15 +67,15 @@ proc next(s: var Spiral) =
 proc sumAdjacents(g: Grid; p: Point): int =
    # Summates the values of the neighboring Points.
    const directions = [
-      initPoint(-1, -1),
-      initPoint(-1, 0),
-      initPoint(-1, 1),
-      initPoint(0, -1),
-      initPoint(0, 1),
-      initPoint(1, -1),
-      initPoint(1, 0),
-      initPoint(1, 1)]
-   for d in directions:
+      point(-1, -1),
+      point(-1, 0),
+      point(-1, 1),
+      point(0, -1),
+      point(0, 1),
+      point(1, -1),
+      point(1, 0),
+      point(1, 1)]
+   for d in directions.items:
       let adjacent = p + d
       if adjacent in g:
          result += g[adjacent]
@@ -107,5 +106,5 @@ proc solvePart2(number: int): Natural =
 # -------------
 
 let input = 347991
-echo solvePart1(input)
-echo solvePart2(input)
+echo solvePart1(input) # 480
+echo solvePart2(input) # 349975
