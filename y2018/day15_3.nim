@@ -7,7 +7,7 @@ type
 proc `+`(self, other: Pt): Pt =
    (self.x + other.x, self.y + other.y)
 
-proc nb4(self: Pt): Pt =
+proc nb4(self: Pt): seq[Pt] =
    collect(newSeq, for d in items([(0, 1), (1, 0), (0, -1), (-1, 0)]): self + d)
 
 type
@@ -35,32 +35,48 @@ proc initGrid(lines: seq[string], power=3): Grid =
          result.storage[(i, j)] = el == '#'
          if el == 'E':
             result.units.add Unit(
-               team= Team.ELF,
-               position=(i, j),
-               hp=200,
-               alive=true,
-               power=power)
+               team: Team.ELF,
+               position: (i, j),
+               hp: 200,
+               alive: true,
+               power: power)
          elif el == 'G':
             result.units.add Unit(
-               team=Team.GOBLIN,
-               position=(i, j),
-               hp=200,
-               alive=true,
-               power=3)
+               team: Team.GOBLIN,
+               position: (i, j),
+               hp: 200,
+               alive: true,
+               power: 3)
 
-proc play(self: Grid, elfDeath=false): int =
-   var rounds = 0
-   while true:
-      if self.round(elfDeath=elfDeath):
-         break
-      rounds.inc
-   result = rounds * sum(collect(newSeq, for unit in self.units: (if unit.alive: unit.hp))
+proc findMove(self: Grid, position: Pt, targets: HashSet[Pt]): Pt =
+   var visiting = initDeque[(Pt, int)]()
+   visiting.addLast((position, 0))
+   var meta = {position: (0, (0, 0))}.toTable
+   var seen = initHashSet[Pt]()
+   var occupied = collect(initHashSet, for unit in self.units: (if unit.alive: {unit.position}))
 
-proc round(self: Grid, elfDeath=false): bool =
-   for unit in sorted(self.units, (a, b) => cmp(a.position, a.position)):
-      if unit.alive:
-         if self.move(unit, elfDeath=elfDeath):
-            return true
+   while visiting.len > 0:
+      let (pos, dist) = visiting.popFirst()
+      for nb in pos.nb4:
+         if self.storage[nb] or nb in occupied:
+            continue
+         if nb notin meta or meta[nb] > (dist + 1, pos):
+            meta[nb] = (dist + 1, pos)
+         if nb in seen:
+            continue
+         if not any(for visit in visiting: (if nb == visit[0])):
+            visiting.addLast((nb, dist + 1))
+      seen.incl(pos)
+
+   try:
+      var (min_dist, closest) = min(collect(newSeq, for pos, (dist, parent) in meta.items: (if pos in targets: (dist, pos))))
+   except ValueError:
+      return
+
+   while meta[closest][0] > 1:
+      closest = meta[closest][1]
+
+   return closest
 
 proc move(self: Grid, unit: Unit, elfDeath=false): bool =
    let targets = collect(newSeq, for target in self.units: (if unit.team != target.team and target.alive: target))
@@ -92,35 +108,19 @@ proc move(self: Grid, unit: Unit, elfDeath=false): bool =
          if elfDeath and target.team == Team.ELF:
             raise newException(ElfDied)
 
-proc findMove(self: Grid, position: Pt, targets: HashSet[Pt]):
-   var visiting = initDeque[(Pt, int)]()
-   visiting.addLast((position, 0))
-   var meta = {position: (0, (0, 0))}.toTable
-   var seen = initHashSet[Pt]()
-   var occupied = collect(initHashSet, for unit in self.units: (if unit.alive: {unit.position}))
+proc play(self: Grid, elfDeath=false): int =
+   var rounds = 0
+   while true:
+      if self.round(elfDeath=elfDeath):
+         break
+      rounds.inc
+   result = rounds * sum(collect(newSeq, for unit in self.units: (if unit.alive: unit.hp)))
 
-   while visiting.len > 0:
-      let (pos, dist) = visiting.popFirst()
-      for nb in pos.nb4:
-         if self.storage[nb] or nb in occupied:
-            continue
-         if nb notin meta or meta[nb] > (dist + 1, pos):
-            meta[nb] = (dist + 1, pos)
-         if nb in seen:
-            continue
-         if not any(for visit in visiting: (if nb == visit[0])):
-            visiting.addLast((nb, dist + 1))
-      seen.incl(pos)
-
-   try:
-      let (min_dist, closest) = min(collect(newSeq, for pos, (dist, parent) in meta.items: (if pos in targets: (dist, pos))))
-   except ValueError:
-      return
-
-   while meta[closest][0] > 1:
-      closest = meta[closest][1]
-
-   return closest
+proc round(self: Grid, elfDeath=false): bool =
+   for unit in sorted(self.units, (a, b) => cmp(a.position, a.position)):
+      if unit.alive:
+         if self.move(unit, elfDeath=elfDeath):
+            return true
 
 let lines = readFile("data/input15_1.txt").splitlines()
 
