@@ -212,7 +212,7 @@ proc play(g: var Game, elfDeath = false): int =
   result = round * remaining
 
 proc createGame(): Game =
-  var input = readFile("data/input15_1.txt")
+  var input = readFile("data/test_input15_7.txt")
   stripLineEnd(input)
   result = initGame(input, 3)
 
